@@ -1,0 +1,9 @@
+sites:
+  encuentra24:
+    url: https://www.encuentra24.com/panama-en/real-estate-for-sale-apartments-condos
+    queries:
+      listing_links: '//a[@class="ann-box-title"]/@href'
+  mitula:
+    url: https://casas.mitula.com.pa/searchRE/orden-0/op-1/q-apartamentos-panama?req_sgmt=REVTS1RPUDtTRU87U0VSUDs=
+    queries:
+      listing_links: '//div[@class="item-card__description"]/a/@href'
