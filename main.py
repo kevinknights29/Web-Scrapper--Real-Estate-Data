@@ -51,7 +51,7 @@ def _site_scraper(site_id, max_pages):
 
 def _save_items(site_id, items):
     now = datetime.now().strftime('%Y_%m_%d')
-    output_file_name = f'{site_id}_{now}_items.csv'
+    output_file_name = f'./output/{site_id}_{now}_items.csv'
     csv_headers = list(
         filter(
             lambda prop: not prop.startswith('_'),
