@@ -3,12 +3,32 @@ from lxml import html
 from common import config
 
 
-class Homepage:
+class ListingsPage():
     def __init__(self, site_id, url):
         self._config = config()['sites'][site_id]
         self._queries = self._config['queries']
         self._html = None
         self._visit(url)
+
+    def _select(self, queries):
+        if type(queries) == list and len(queries) > 1:
+            for query in queries:
+                result = self._html.xpath(query)
+                if result:
+                    return result
+        else:
+            return self._html.xpath(queries)
+
+    def _visit(self, url):
+        response = requests.get(url)
+        response.raise_for_status()
+        response = response.content.decode(encoding='utf-8')
+        self._html = html.fromstring(html=response)
+
+
+class Homepage(ListingsPage):
+    def __init__(self, site_id, url):
+        super().__init__(site_id, url)
 
     @property
     def listing_links(self):
@@ -18,11 +38,22 @@ class Homepage:
                 links.append(str(link))
         return set(links)
 
-    def _select(self, query):
-        return self._html.xpath(query)
 
-    def _visit(self, url):
-        response = requests.get(url)
-        response.raise_for_status()
-        response = response.content.decode(encoding='utf-8')
-        self._html = html.fromstring(html=response)
+class ItemPage(ListingsPage):
+    def __init__(self, site_id, url):
+        super().__init__(site_id, url)
+
+    @property
+    def title(self):
+        result = self._select(self._queries['listing_title'])
+        return result if result else ''
+
+    @property
+    def price(self):
+        result = self._select(self._queries['listing_price'])
+        return result if result else ''
+
+    @property
+    def description(self):
+        result = self._select(self._queries['listing_description'])
+        return result if result else ''
