@@ -25,6 +25,13 @@ class ListingsPage():
         response = response.content.decode(encoding='utf-8')
         self._html = html.fromstring(html=response)
 
+    def _get_next_page(self):
+        result = self._select(self._queries['next_page'])
+        if type(result) == list and len(result) > 1:
+            return result[0]
+        else:
+            return result if result else ''
+
 
 class Homepage(ListingsPage):
     def __init__(self, site_id, url):

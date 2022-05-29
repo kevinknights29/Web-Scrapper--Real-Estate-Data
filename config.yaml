@@ -19,6 +19,7 @@ sites:
           '//div[contains(@class, "about__text")]/text()',
           '//div[@class="col-800"]/p/text()',
         ]
+      next_page: '//li[@class="arrow"]/a[@rel="next"]/./@href'
   mitula:
     domain: https://casas.mitula.com.pa
     url: https://casas.mitula.com.pa/searchRE/orden-0/op-1/q-apartamentos-panama?req_sgmt=REVTS1RPUDtTRU87U0VSUDs=
@@ -27,3 +28,4 @@ sites:
       listing_title: '//div[@class="title-detail"]/text()'
       listing_price: '//div[@class="adPrice"]/text()'
       listing_description: '//div[@class="description-detail"]/text()'
+      next_page: '//li[contains(@class,"activated")]/following-sibling::li/a/@href'

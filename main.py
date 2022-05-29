@@ -13,19 +13,44 @@ is_well_formed_url = re.compile(r'^https?://.+/.+$')
 is_root_path = re.compile(r'^/.+$')
 
 
-def _site_scraper(site_id):
+def _site_scraper(site_id, max_pages):
     domain = config()['sites'][site_id]['domain']
     host = config()['sites'][site_id]['url']
     logging.info(f'Now scraping: {host}')
     homepage = sites.Homepage(site_id, url=host)
 
     items = []
-    for link in homepage.listing_links:
+    _get_items_from_links(items, site_id, domain,
+                          links=homepage.listing_links)
+
+    page_count = 1
+    while True and page_count < max_pages:
+        message = f'Items fetched: {len(items)}' + \
+            ' || ' + f'From Pages: {page_count}'
+        logger.info(message)
+
+        if homepage._get_next_page():
+            logger.info(f'Next page: {homepage._get_next_page()}')
+            next_page_url = _build_link(domain, link=homepage._get_next_page())
+            homepage = sites.Homepage(site_id, url=next_page_url)
+            _get_items_from_links(items, site_id, domain,
+                                  links=homepage.listing_links)
+            page_count += 1
+        else:
+            break
+
+    logger.info('Scraping completed!')
+
+
+def _get_items_from_links(items, site_id, domain, links):
+    if items is None:
+        items = []
+
+    for link in links:
         item = _fetch_item(site_id, domain, link)
         if item:
             logger.info('Item fetched succesfully!')
             items.append(item)
-    logger.info(f'Items fetched: {len(items)} / {len(homepage.listing_links)}')
 
 
 def _fetch_item(site_id, host, link):
@@ -59,7 +84,14 @@ if __name__ == '__main__':
         'site',
         help='The site you would like to scrape',
         type=str,
-        choices=site_choices
+        choices=site_choices,
+    )
+    parser.add_argument(
+        'max_pages',
+        help='The max number of pages you would like to scrape. (default: 10000)',
+        type=int,
+        nargs='?',
+        const=10000
     )
     args = parser.parse_args()
-    _site_scraper(args.site)
+    _site_scraper(args.site, args.max_pages)
