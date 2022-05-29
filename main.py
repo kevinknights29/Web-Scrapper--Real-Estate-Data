@@ -2,6 +2,7 @@ import re
 import argparse
 import logging
 from urllib.error import HTTPError
+from urllib3.exceptions import MaxRetryError
 from common import config
 import site_page_objects as sites
 logging.basicConfig(level=logging.INFO)
