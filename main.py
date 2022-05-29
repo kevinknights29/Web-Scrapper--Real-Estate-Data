@@ -1,10 +1,16 @@
-import re
 import argparse
+import csv
 import logging
+import os
+import re
+from datetime import datetime
 from urllib.error import HTTPError
+
 from urllib3.exceptions import MaxRetryError
-from common import config
+
 import site_page_objects as sites
+from common import config
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -40,6 +46,29 @@ def _site_scraper(site_id, max_pages):
             break
 
     logger.info('Scraping completed!')
+    _save_items(site_id, items)
+
+
+def _save_items(site_id, items):
+    now = datetime.now().strftime('%Y_%m_%d')
+    output_file_name = f'{site_id}_{now}_items.csv'
+    csv_headers = list(
+        filter(
+            lambda prop: not prop.startswith('_'),
+            dir(items[0])
+        )
+    )
+
+    with open(output_file_name, mode='w+', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(csv_headers)
+
+        for item in items:
+            row = [str(getattr(item, prop)) for prop in csv_headers]
+            writer.writerow(row)
+
+    logging.info(
+        f'Items stored succesfully at: {os.path.relpath(output_file_name)}')
 
 
 def _get_items_from_links(items, site_id, domain, links):
