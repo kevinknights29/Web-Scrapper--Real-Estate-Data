@@ -8,7 +8,7 @@ from urllib.error import HTTPError
 
 from urllib3.exceptions import MaxRetryError
 
-import lib.site_page_objects as sites
+import library.site_page_objects as sites
 from common import config
 
 logging.basicConfig(level=logging.INFO)
