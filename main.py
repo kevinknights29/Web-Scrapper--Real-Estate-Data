@@ -9,6 +9,7 @@ from urllib.error import HTTPError
 from urllib3.exceptions import MaxRetryError
 
 import library.site_page_objects as sites
+import library.s3_bucket as s3
 from common import config
 
 logging.basicConfig(level=logging.INFO)
@@ -69,6 +70,7 @@ def _save_items(site_id, items):
 
     logging.info(
         f'Items stored succesfully at: {os.path.relpath(output_file_name)}')
+    s3.upload_file_to_s3(output_file_name)
 
 
 def _get_items_from_links(items, site_id, domain, links):
