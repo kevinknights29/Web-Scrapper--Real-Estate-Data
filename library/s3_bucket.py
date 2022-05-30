@@ -1,7 +1,12 @@
-import boto3
+import logging
 import os
+
+import boto3
 from dotenv import load_dotenv
+
 load_dotenv()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def s3_instance():
@@ -16,12 +21,12 @@ def s3_instance():
 
 def check_buckets():
     s3 = s3_instance()
-    print(f'Bucket Creation Date: {s3.creation_date}')
+    logger.info(f'Bucket Creation Date: {s3.creation_date}')
     if len(list(s3.objects.all())) > 0:
         for object in s3.objects.all():
-            print(f'Bucket contains: {object}')
+            logger.info(f'Bucket contains: {object}')
     else:
-        print('Bucket has no objects inside!')
+        logger.info('Bucket has no objects inside!')
 
 
 def upload_file_to_s3(file_path):
@@ -30,7 +35,7 @@ def upload_file_to_s3(file_path):
         Filename=file_path,
         Key=os.path.basename(file_path),
     )
-    print('File uploaded to S3 successfully!')
+    logger.info(f'{file_path} uploaded to S3 successfully!')
 
 
 def delete_file_from_s3(file_path):
@@ -44,7 +49,7 @@ def delete_file_from_s3(file_path):
             ]
         }
     )
-    print('File deleted successfully!')
+    logger.info(f'{file_path} deleted successfully!')
 
 
 if __name__ == '__main__':

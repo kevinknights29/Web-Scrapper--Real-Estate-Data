@@ -27,27 +27,37 @@ def _site_scraper(site_id, max_pages):
     homepage = sites.Homepage(site_id, url=host)
 
     items = []
-    _get_items_from_links(items, site_id, domain,
-                          links=homepage.listing_links)
+    try:
+        _get_items_from_links(items, site_id, domain,
+                              links=homepage.listing_links)
 
-    page_count = 1
-    while True and page_count < max_pages:
-        message = f'Items fetched: {len(items)}' + \
-            ' || ' + f'From Pages: {page_count}'
-        logger.info(message)
+        page_count = 1
+        while True and page_count < max_pages:
+            _notify_progress(items, page_count)
+            if homepage._get_next_page():
+                logger.info(f'Next page: {homepage._get_next_page()}')
+                next_page_url = _build_link(
+                    domain, link=homepage._get_next_page())
+                homepage = sites.Homepage(site_id, url=next_page_url)
+                _get_items_from_links(items, site_id, domain,
+                                      links=homepage.listing_links)
+                page_count += 1
+            else:
+                break
+    except Exception as e:
+        logger.warning(f'Something unexpected happend... {e}', exc_info=False)
+    else:
+        logger.info('Stopping scrapper, no error encountered...')
+    finally:
+        logger.info('Scraping Ended!')
+        _notify_progress(items, page_count)
+        _save_items(site_id, items)
 
-        if homepage._get_next_page():
-            logger.info(f'Next page: {homepage._get_next_page()}')
-            next_page_url = _build_link(domain, link=homepage._get_next_page())
-            homepage = sites.Homepage(site_id, url=next_page_url)
-            _get_items_from_links(items, site_id, domain,
-                                  links=homepage.listing_links)
-            page_count += 1
-        else:
-            break
 
-    logger.info('Scraping completed!')
-    _save_items(site_id, items)
+def _notify_progress(items, page_count):
+    message = f'Items fetched: {len(items)}' + \
+        ' || ' + f'From Pages: {page_count}'
+    logger.info(message)
 
 
 def _save_items(site_id, items):

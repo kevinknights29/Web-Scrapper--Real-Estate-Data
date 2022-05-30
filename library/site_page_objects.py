@@ -1,6 +1,11 @@
+import logging
+
 import requests
-from lxml import html
 from common import config
+from lxml import html
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class ListingsPage():
@@ -12,23 +17,31 @@ class ListingsPage():
         self._visit(self._url)
 
     def _select(self, queries):
-        if type(queries) == list and len(queries) > 1:
-            for query in queries:
-                result = self._html.xpath(query)
-                if result:
-                    return result
+        if self._html:
+            if type(queries) == list and len(queries) > 1:
+                for query in queries:
+                    result = self._html.xpath(query)
+                    if result:
+                        return result
+            else:
+                return self._html.xpath(queries)
         else:
-            return self._html.xpath(queries)
+            logger.warning(
+                'Unable to perform queries due to errow with html...')
+            return None
 
     def _visit(self, url):
         response = requests.get(url)
         response.raise_for_status()
-        response = response.content.decode(encoding='utf-8')
-        self._html = html.fromstring(html=response)
+        if response.content:
+            response = response.content.decode(encoding='utf-8')
+            self._html = html.fromstring(html=response)
+        else:
+            logger.warning(f'Unable to fetch html from {url}')
 
     def _get_next_page(self):
         result = self._select(self._queries['next_page'])
-        if type(result) == list and len(result) > 1:
+        if type(result) == list and len(result) >= 1:
             return result[0]
         else:
             return result if result else ''
