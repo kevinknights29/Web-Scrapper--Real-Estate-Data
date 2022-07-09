@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 
@@ -44,10 +46,10 @@ def delete_file_from_s3(file_path):
         Delete={
             'Objects': [
                 {
-                    'Key': os.path.basename(file_path)
-                }
-            ]
-        }
+                    'Key': os.path.basename(file_path),
+                },
+            ],
+        },
     )
     logger.info(f'{file_path} deleted successfully!')
 

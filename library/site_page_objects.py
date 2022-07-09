@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 import logging
 
 import requests
-from common import config
+import toml
 from lxml import html
 
 logging.basicConfig(level=logging.INFO)
+
+config = toml.load('./config.toml')
 logger = logging.getLogger(__name__)
 
 
 class ListingsPage():
     def __init__(self, site_id, url):
-        self._config = config()['sites'][site_id]
+        self._config = config['sites'][site_id]
         self._queries = self._config['queries']
         self._html = None
         self._url = url
@@ -27,7 +31,8 @@ class ListingsPage():
                 return self._html.xpath(queries)
         else:
             logger.warning(
-                'Unable to perform queries due to errow with html...')
+                'Unable to perform queries due to errow with html...',
+            )
             return None
 
     def _visit(self, url):

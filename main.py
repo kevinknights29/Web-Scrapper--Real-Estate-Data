@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import csv
 import logging
@@ -6,58 +8,52 @@ import re
 from datetime import datetime
 from urllib.error import HTTPError
 
+import toml
 from urllib3.exceptions import MaxRetryError
 
-import library.site_page_objects as sites
 import library.s3_bucket as s3
-from common import config
+import library.site_page_objects as sites
 
 logging.basicConfig(level=logging.INFO)
 
-
+config = toml.load('./config.toml')
 logger = logging.getLogger(__name__)
 is_well_formed_url = re.compile(r'^https?://.+/.+$')
 is_root_path = re.compile(r'^/.+$')
 
 
 def _site_scraper(site_id, max_pages):
-    domain = config()['sites'][site_id]['domain']
-    host = config()['sites'][site_id]['url']
+    domain = config['sites'][site_id]['domain']
+    host = config['sites'][site_id]['url']
     logging.info(f'Now scraping: {host}')
     homepage = sites.Homepage(site_id, url=host)
 
     items = []
-    try:
-        _get_items_from_links(items, site_id, domain,
-                              links=homepage.listing_links)
+    _get_items_from_links(
+        items, site_id, domain,
+        links=homepage.listing_links,
+    )
 
-        page_count = 1
-        while True and page_count < max_pages:
-            _notify_progress(items, page_count)
-            if homepage._get_next_page():
-                logger.info(f'Next page: {homepage._get_next_page()}')
-                next_page_url = _build_link(
-                    domain, link=homepage._get_next_page())
-                homepage = sites.Homepage(site_id, url=next_page_url)
-                _get_items_from_links(items, site_id, domain,
-                                      links=homepage.listing_links)
-                page_count += 1
-            else:
-                break
-    except Exception as e:
-        logger.warning(f'Something unexpected happend... {e}', exc_info=False)
-    else:
-        logger.info('Stopping scrapper, no error encountered...')
-    finally:
-        logger.info('Scraping Ended!')
-        _notify_progress(items, page_count)
-        _save_items(site_id, items)
+    page_count = 1
+    while True and page_count < max_pages:
+        message = f'Items fetched: {len(items)}' + \
+            ' || ' + f'From Pages: {page_count}'
+        logger.info(message)
 
+        if homepage._get_next_page():
+            logger.info(f'Next page: {homepage._get_next_page()}')
+            next_page_url = _build_link(domain, link=homepage._get_next_page())
+            homepage = sites.Homepage(site_id, url=next_page_url)
+            _get_items_from_links(
+                items, site_id, domain,
+                links=homepage.listing_links,
+            )
+            page_count += 1
+        else:
+            break
 
-def _notify_progress(items, page_count):
-    message = f'Items fetched: {len(items)}' + \
-        ' || ' + f'From Pages: {page_count}'
-    logger.info(message)
+    logger.info('Scraping completed!')
+    _save_items(site_id, items)
 
 
 def _save_items(site_id, items):
@@ -66,8 +62,8 @@ def _save_items(site_id, items):
     csv_headers = list(
         filter(
             lambda prop: not prop.startswith('_'),
-            dir(items[0])
-        )
+            dir(items[0]),
+        ),
     )
 
     with open(output_file_name, mode='w+', encoding='utf-8') as csvfile:
@@ -79,7 +75,8 @@ def _save_items(site_id, items):
             writer.writerow(row)
 
     logging.info(
-        f'Items stored succesfully at: {os.path.relpath(output_file_name)}')
+        f'Items stored succesfully at: {os.path.relpath(output_file_name)}',
+    )
     s3.upload_file_to_s3(output_file_name)
 
 
@@ -99,7 +96,7 @@ def _fetch_item(site_id, host, link):
     item = None
     try:
         item = sites.ItemPage(site_id, url=_build_link(host, link))
-    except (HTTPError, MaxRetryError) as e:
+    except (HTTPError, MaxRetryError):
         logger.warning('Error while fetching the item', exc_info=False)
 
     condition = not item.price or not item.title
@@ -120,7 +117,7 @@ def _build_link(host, link):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    site_choices = list(config()['sites'].keys())
+    site_choices = list(config['sites'].keys())
     parser.add_argument(
         'site',
         help='The site you would like to scrape',
@@ -129,10 +126,10 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         'max_pages',
-        help='The max number of pages you would like to scrape. (default: 10000)',
+        help='Number of pages to scrape. (default: 10000)',
         type=int,
         nargs='?',
-        const=10000
+        const=10000,
     )
     args = parser.parse_args()
     _site_scraper(args.site, args.max_pages)
