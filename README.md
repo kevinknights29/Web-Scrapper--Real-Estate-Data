@@ -10,4 +10,5 @@
 - Encuentra24
 - Mitula
 
-![alt text](misc/screenshot.jpeg)
+<br>
+<img src="https://i.imgur.com/QektISc.png" alt="Real Estate Web Scraper">
