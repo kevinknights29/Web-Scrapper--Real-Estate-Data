@@ -11,8 +11,7 @@ from urllib.error import HTTPError
 import toml
 from urllib3.exceptions import MaxRetryError
 
-import library.s3_bucket as s3
-import library.site_page_objects as sites
+import project
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,7 +25,7 @@ def _site_scraper(site_id, max_pages):
     domain = config['sites'][site_id]['domain']
     host = config['sites'][site_id]['url']
     logging.info(f'Now scraping: {host}')
-    homepage = sites.Homepage(site_id, url=host)
+    homepage = project.site_page_objects.Homepage(site_id, url=host)
 
     items = []
     _get_items_from_links(
@@ -43,7 +42,9 @@ def _site_scraper(site_id, max_pages):
         if homepage._get_next_page():
             logger.info(f'Next page: {homepage._get_next_page()}')
             next_page_url = _build_link(domain, link=homepage._get_next_page())
-            homepage = sites.Homepage(site_id, url=next_page_url)
+            homepage = project.site_page_objects.Homepage(
+                site_id, url=next_page_url,
+            )
             _get_items_from_links(
                 items, site_id, domain,
                 links=homepage.listing_links,
@@ -77,7 +78,7 @@ def _save_items(site_id, items):
     logging.info(
         f'Items stored succesfully at: {os.path.relpath(output_file_name)}',
     )
-    s3.upload_file_to_s3(output_file_name)
+    project.s3_bucket.upload_file_to_s3(output_file_name)
 
 
 def _get_items_from_links(items, site_id, domain, links):
@@ -95,7 +96,9 @@ def _fetch_item(site_id, host, link):
     logger.info(f'Fetching item from {_build_link(host, link)}')
     item = None
     try:
-        item = sites.ItemPage(site_id, url=_build_link(host, link))
+        item = project.site_page_objects.ItemPage(
+            site_id, url=_build_link(host, link),
+        )
     except (HTTPError, MaxRetryError):
         logger.warning('Error while fetching the item', exc_info=False)
 
