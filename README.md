@@ -12,3 +12,23 @@
 
 <br>
 <img src="https://i.imgur.com/QektISc.png" alt="Real Estate Web Scraper">
+
+## Getting Started
+
+### Docker
+
+- Build container with:
+
+    ```bash
+    docker build . -t web-scrapper-real-estate
+    ```
+
+- Run the containerized application with:
+
+    ```bash
+    docker run web-scrapper-real-estate
+    ```
+
+You should start seeing the following output from the processing script.
+
+![image](https://github.com/kevinknights29/Web-Scrapper--Real-Estate-Data/assets/74464814/e742bf91-eef2-40d2-aa89-7533d73c27fc)
