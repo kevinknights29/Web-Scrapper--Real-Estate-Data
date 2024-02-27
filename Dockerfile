@@ -1,8 +1,8 @@
 FROM python:3.10-slim-bullseye
 
 # Set the environment variables
-ENV PYTHONPATH=/opt/app \
-    SITE=encuentra24 \
+ENV PYTHONPATH="${PYTHONPATH}:/opt/app/" \
+    SITE="encuentra24" \
     MAX_PAGES=10000
 
 # Set the working directory
@@ -19,7 +19,7 @@ RUN apt-get update && \
     && apt-get clean
 
 # Copy the project files into the working directory
-ADD project/ .
+ADD project/ ./project
 COPY config.toml main.py requirements.txt ./
 
 # Install the project dependencies
@@ -27,4 +27,4 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Run the application
-CMD ["python", "main.py", "--site", ${SITE}, "--max_pages", ${MAX_PAGES}]
+CMD python3 main.py ${SITE} ${MAX_PAGES}
