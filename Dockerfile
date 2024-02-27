@@ -1,7 +1,9 @@
 FROM python:3.10-slim-bullseye
 
 # Set the environment variables
-ENV PYTHONPATH=/opt/app
+ENV PYTHONPATH=/opt/app \
+    SITE=encuentra24 \
+    MAX_PAGES=10000
 
 # Set the working directory
 WORKDIR /opt/app
@@ -25,4 +27,4 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Run the application
-CMD ["python", "main.py", "--site", "encuentra24"]
+CMD ["python", "main.py", "--site", ${SITE}, "--max_pages", ${MAX_PAGES}]
